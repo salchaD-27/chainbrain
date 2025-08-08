@@ -1,0 +1,46 @@
+[DATABASE]
+PostgreSQL - chainbrain
+creation - createdb -h localhost -p 5432 chainbrain
+connection - psql -h localhost -p 5432 -d chainbrain
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS prediction_history (
+    id SERIAL PRIMARY KEY,
+    hour INT NOT NULL,
+    day_of_week INT NOT NULL,
+    transactionsCount INT NOT NULL,
+    gasUsed BIGINT NOT NULL,
+    tokenTransfersCount INT NOT NULL,
+    totalTokenAmount BIGINT NOT NULL,
+    uniqueSenders INT NOT NULL,
+    uniqueReceivers INT NOT NULL,
+    prediction INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+User Authentication/Login
+The user signs into the dashboard using the authentication system (e.g., next-auth with credentials or external providers).
+Upon successful login, the user gains access to protected pages like the dashboard and prediction interface.
+
+Entering Block Details / Feature Inputs
+The dashboard UI provides a form or inputs where the user can enter or select Ethereum block-related features (hour, day_of_week, transactionsCount, gasUsed, tokenTransfersCount, totalTokenAmount, uniqueSenders, uniqueReceivers).
+This could be manual input fields, dropdowns, or even selecting blocks from a list or timeline.
+
+Prediction Request & Response
+When the user submits the block details, the frontend sends a POST request to your Express API Gateway endpoint /predict.
+The API gateway validates the input, forwards it to the Python ML backend /predict endpoint, which returns the prediction (e.g., anomaly score, class label).
+
+Display Prediction & Update Chart
+The frontend receives the prediction result and updates the UI accordingly:
+Show prediction result (e.g., “Anomaly detected” or predicted class).
+Update charts to reflect the new data point, showing prediction trends over time or per block.
+Optionally store the submitted block and prediction to keep a local or backend history that the chart visualizes.

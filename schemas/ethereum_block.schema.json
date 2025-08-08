@@ -1,0 +1,59 @@
+{
+  "$id": "http://localhost:3000/ethereum-block.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EthereumBlockData",
+  "type": "object",
+  "required": ["blockNumber", "timestamp", "transactionsCount", "gasUsed", "tokenTransfers"],
+  "properties": {
+    "blockNumber": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Ethereum block number"
+    },
+    "timestamp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unix epoch timestamp of the block"
+    },
+    "transactionsCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of transactions in the block"
+    },
+    "gasUsed": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Total gas used in the block as a string to prevent precision loss"
+    },
+    "tokenTransfers": {
+      "type": "array",
+      "description": "List of ERC-20 token transfer events in the block",
+      "items": {
+        "type": "object",
+        "required": ["tokenAddress", "from", "to", "amount"],
+        "properties": {
+          "tokenAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address of the token contract"
+          },
+          "from": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Sender Ethereum address"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Recipient Ethereum address"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "Amount of tokens transferred as string to handle large numbers"
+          }
+        }
+      }
+    }
+  }
+}

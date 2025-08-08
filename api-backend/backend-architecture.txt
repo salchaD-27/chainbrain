@@ -1,0 +1,16 @@
+1. Express.js API Gateway
+Acts as the frontend API gateway receiving prediction requests from clients.
+Validates incoming requests before forwarding to your Python ML backend.
+Implements middleware for logging, retrying failed requests, and optionally caching responses.
+Optional integration point for Kafka consumer (if you want your API to consume Kafka streams directly).
+
+2. Python ML Backend Service
+Your existing FastAPI backend serves this role by exposing /predict.
+Add middleware for request logging, error handling, caching if needed (e.g., using fastapi.middleware or external libraries).
+Implement retries using client-side logic (e.g., in Express), or decorate prediction calls in backend if calling internal services.
+
+3. Kafka Consumer Integration
+You can run Kafka consumer as a separate microservice or embed it in either backend.
+If integrating in Express.js, use Kafka clients like kafkajs.
+For Python backend, continue using kafka-python or confluent-kafka.
+Decide based on your architecture preferences; standalone services are recommended for scalability and separation.

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_KRAFT_MODE: "true"                      # Enable KRaft mode (no Zookeeper)
+      KAFKA_PROCESS_ROLES: controller,broker        # Kafka acts as both controller and broker
+      KAFKA_NODE_ID: 1                              # Unique ID for this Kafka node
+      # KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"  # Controller quorum voting
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      # Using localhost inside Docker means "inside the container", so your host machine (python3 test-producer.py) cannot connect to localhost:9092 because that refers to itself, not the container.
+      # KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      
+      # 0.0.0.0 means “listen on all interfaces” inside the container (internal + external).
+      # host.docker.internal is a special hostname that Docker provides on macOS/Windows to access services on the host.
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      # KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://host.docker.internal:9092
+      # localhost — clients (your Python app) connect on localhost:9092 on your Mac.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_RETENTION_HOURS: 168                # Log retention duration
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"       # Auto topic creation enabled for dev
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      
+      # generating uuid/clusterid - python3 -c "import uuid; print(uuid.uuid4())"
+      CLUSTER_ID: "a97ac933-61d8-4951-872c-6d71b1e44349"
+    volumes:
+      - kafka-data:/var/lib/kafka/data               # Persist Kafka logs/data
+
+volumes:
+  kafka-data:

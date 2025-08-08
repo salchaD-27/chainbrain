@@ -1,0 +1,84 @@
+# === Node.js (Express API, etc.) ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files (secrets!)
+.env
+.env.*.local
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Dependency directories for mono repos or nested projects
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+
+# === Python (ML backend) ===
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Python virtual environment manager files
+Pipfile.lock
+poetry.lock
+
+# Jupyter Notebooks checkpoints (if used)
+.ipynb_checkpoints/
+
+# Python environment/secrets
+.env
+*.env
+
+# === VSCode/JetBrains/Editor config ===
+.vscode/
+.idea/
+*.swp
+
+# === OS-generated ===
+.DS_Store
+Thumbs.db
+
+# === Git ===
+*.orig
+
+# === Compiled output ===
+*.out
+*.o
+
+# === Frontend (React/Next.js) ===
+.next/
+out/
+coverage/
+build/
+
+# === Misc ===
+*.bak
+*.tmp
+.cache/
+.parcel-cache/
+
+# === Ignore model files and training artifacts ===
+models/
+checkpoints/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.onnx
+
+# === Ignore data files ===
+data/
+*.csv
+*.json
+*.db

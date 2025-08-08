@@ -1,0 +1,52 @@
+[
+  {
+    "hour": 10,
+    "day_of_week": 1,
+    "transactionsCount": 50,
+    "gasUsed": 30000000,
+    "tokenTransfersCount": 3,
+    "totalTokenAmount": 500000000000000000,
+    "uniqueSenders": 4,
+    "uniqueReceivers": 5
+  },
+  {
+    "hour": 14,
+    "day_of_week": 2,
+    "transactionsCount": 120,
+    "gasUsed": 29000000,
+    "tokenTransfersCount": 8,
+    "totalTokenAmount": 1800000000000000000,
+    "uniqueSenders": 12,
+    "uniqueReceivers": 15
+  },
+  {
+    "hour": 3,
+    "day_of_week": 6,
+    "transactionsCount": 15,
+    "gasUsed": 8000000,
+    "tokenTransfersCount": 1,
+    "totalTokenAmount": 250000000000000000,
+    "uniqueSenders": 2,
+    "uniqueReceivers": 2
+  },
+  {
+    "hour": 22,
+    "day_of_week": 0,
+    "transactionsCount": 95,
+    "gasUsed": 31500000,
+    "tokenTransfersCount": 12,
+    "totalTokenAmount": 7000000000000000000,
+    "uniqueSenders": 20,
+    "uniqueReceivers": 19
+  },
+  {
+    "hour": 8,
+    "day_of_week": 4,
+    "transactionsCount": 5,
+    "gasUsed": 2000000,
+    "tokenTransfersCount": 0,
+    "totalTokenAmount": 0,
+    "uniqueSenders": 1,
+    "uniqueReceivers": 1
+  }
+]

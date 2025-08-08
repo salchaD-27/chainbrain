@@ -1,0 +1,240 @@
+chainbrain/
+├── api-backend/
+│   ├── index.js                  # Main Express server entry
+│   ├── kafka_consumer.js         # Kafka consumer to listen to streams (optional in this phase)
+│   ├── routes/
+│   │   └── predict.js            # Route for /predict API (future use)
+│   └── utils/
+│       └── kafka_producer.js    # Kafka producer to send blockchain data
+├── ml-backend/
+│   ├── app/
+│   │   ├── model.py              # Placeholder for ML models (future use)
+│   │   ├── utils.py              # Helpers (future use)
+│   │   └── routes.py             # API routes for ML predictions (future use)
+│   └── main.py                   # Entry for FastAPI or Django server (future use)
+├── data-fetcher/
+│   ├── fetcher.py               # Script to fetch Ethereum data from Alchemy/Infura and stream to Kafka
+│   └── config.py                # Configuration for APIs, Kafka endpoints, etc.
+├── kafka/
+│   ├── docker-compose.yml       # Optional Kafka setup for local testing
+│   └── scripts/
+│       └── setup_topics.sh      # Script for Kafka topic creation if needed
+├── frontend/
+│   ├── pages/
+│   ├── components/
+│   └── ...                      # React (Next.js) frontend will be added later
+├── models/                      # To store your trained models later
+├── docker-compose.yml           # Compose for orchestrating all services
+└── README.md
+
+
+
+------------------
+Phase 1
+------------------
+A. Set up Blockchain Data Fetcher
+Use the Alchemy or Infura Python SDK (e.g., alchemy-sdk for Alchemy or web3.py for generic Ethereum).
+Implement a script (fetcher.py) that:
+Connects to Ethereum node via Alchemy/Infura API.
+Subscribes or polls for new blocks, transactions, or events.
+Extracts relevant data (transaction volume, token transfers, contract events).
+Sends the structured data to Kafka through a producer module.
+
+B. Set up Apache Kafka
+If Kafka is not already available, set up a local Kafka instance using Docker for easier development.
+Define Kafka topics like ethereum-data to receive blockchain streams.
+Implement a Kafka producer (in Python or Node.js) inside your data_fetcher/ that sends Ethereum data to the topic.
+Build a simple Kafka consumer (optional for test phase) to verify messages are received properly.
+
+Set up Local Kafka Using Docker
+Use Docker Compose to run Kafka locally with all needed components.
+Kafka requires a ZooKeeper or can run in KRaft mode (without ZooKeeper).
+Run Kafka with: docker-compose up -d
+Kafka will be accessible on localhost:9092.
+
+Create Kafka Topic
+Kafka can auto-create topics when the producer sends messages if configured.
+Alternatively, manually create a topic with Kafka CLI (available inside the container or installed locally):
+kafka-topics --create --topic ethereum-data --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+Kafka Producer (Python)
+Use kafka-python library to send Ethereum data to Kafka topic ethereum-data.
+
+Verify Kafka is accessible
+Run inside the container:
+docker exec -it kafka bash
+Then, check topics:
+kafka-topics --list --bootstrap-server localhost:9092
+If no topics yet, that’s fine — we’ll create one.
+
+Create your ethereum-data topic
+(You can skip if auto-topic creation is true in your Docker config)
+docker exec -it kafka kafka-topics \
+  --create \
+  --topic ethereum-data \
+  --bootstrap-server localhost:9092 \
+  --partitions 1 \
+  --replication-factor 1
+Test with a simple producer/consumer
+We can quickly test Kafka before wiring it into our blockchain fetcher.(test-producer.py)
+Run producer: python3 test_producer.py
+Then consumer: python3 test_consumer.py
+You should see:
+Received: {'msg': 'Hello from Kafka!'}
+
+
+C. Integrate Ethereum Data Fetcher with Kafka Producer
+Import KafkaProducer in your fetcher script
+Use kafka-python to produce messages to Kafka.
+Initialize Kafka producer
+Connect to your local Kafka broker (e.g., localhost:9092).
+Fetch Ethereum block data using Alchemy SDK
+Continuously poll for new blocks.
+Extract relevant data from blocks
+Such as block number, timestamp, transaction count, gas used, token transfers.
+Send the extracted data as JSON messages to Kafka
+Use the Kafka producer to send to your ethereum-data topic.
+Flush producer messages and log sends
+To ensure reliability and observability.
+
+
+
+D. Organize Data Schema and Streaming Format
+Define JSON schemas for data payloads, e.g.,
+
+E. Build a Kafka Consumer Service
+Develop a Kafka consumer (in Python or Node.js/Express) that listens to the ethereum-data topic, receives the streamed Ethereum block data, and processes it as needed. This consumer will be the bridge to the ML backend in the next phase.
+This service will:
+Listen continuously to the ethereum-data Kafka topic.
+Receive the streamed Ethereum block data.
+Process or transform the data as needed.
+Forward the processed data to your ML backend for prediction (in the next phase).
+
+
+------------------
+Phase 2
+------------------
+
+A. Defining ML Inputs and Targets
+Analyze your available blockchain data schema and determine which features (block metrics, transaction counts, token transfers) will be input variables for your ML models.
+Define prediction objectives (e.g., anomaly detection, price prediction, fraud detection).
+
+Analyze Available Blockchain Data Schema and Features
+Your current blockchain data payload streamed through Kafka includes:
+blockNumber: Ethereum block height (integer)
+timestamp: Unix timestamp of the block (integer)
+transactionsCount: Number of transactions in the block (integer)
+gasUsed: Total gas used in the block (string representing integer)
+tokenTransfers: List of token transfer events, each with:
+tokenAddress
+from (sender address)
+to (recipient address)
+amount (string number)
+
+Block-level aggregated features (per block)
+Block height (blockNumber) — as a time ordering feature or for temporal sequence models
+Time features extracted from timestamp (e.g., hour of day, day of week)
+Number of transactions (transactionsCount)
+Gas consumption (gasUsed, converted to numeric)
+Number of token transfers (length of tokenTransfers array)
+Aggregated token transfer amounts by token (sum of amounts per tokenAddress)
+Unique sender/receiver counts (count of unique 'from' and 'to' addresses) within tokenTransfers
+Volume metrics for major tokens or token categories (if classified)
+Gas price averages or median (if you can extract or enrich)
+
+Transaction-level or Transfer-level features (optional detailed granularity)
+Specific token transfer features (individual transfer amount, sender, receiver patterns)
+Token categories, token popularity indices (external enrichment can be added)
+Transaction fees or input data complexity (if available)
+
+B. Data Preprocessing and Feature Engineering
+Build pipelines to preprocess the raw streamed data into ML-ready formats.
+Feature normalization, aggregation, extraction from token transfers, and temporal feature creation.
+
+C. ML Model Selection and Training
+Select appropriate model types (e.g., classical ML, Neural Networks, Transformer-based models like LLaMA3 if applicable).
+Train your models offline on historical blockchain data.
+
+D. Model Serving and Integration
+Develop a Python ML backend service (Django, FastAPI) with /predict API endpoint.
+Integrate your Kafka consumer to forward processed blockchain data for real-time inference.
+Evaluation and Iteration
+Monitor model performance in production.
+Iterate on feature sets, model hyperparameters, and data streaming quality.
+
+
+___________________
+1. Save Extracted Features from Kafka Consumer into features.json
+As your Kafka consumer consumes raw block data, you run your feature extraction function (extract_features) that converts raw blockchain events to numeric ML features.
+Accumulate these feature dictionaries in a list.
+Periodically or on shutdown, save this accumulated feature list as a JSON file named features.json.
+This file serves as a base dataset of raw features extracted from the blockchain stream.
+
+2. Prepare labels.json
+Separately, you prepare or collect your supervised labels mapped to block numbers.
+Labels depend on your ML task (e.g., anomaly flags, price movements).
+Save these labels in JSON format, typically as a dictionary mapping blockNumber (int) to label (int or categorical).
+This can come from external datasets, manual annotation, or derived calculations.
+
+3. Run prepare_training_data.py
+This script loads features.json and labels.json.
+Merges the features with their corresponding labels based on blockNumber.
+Saves the combined data as training_dataset.csv.
+This CSV is your final labeled dataset ready for ML training.
+
+4. Train Model Using training_dataset.csv in train_model.py
+Your training script loads training_dataset.csv.
+Splits into train/test sets.
+Trains your ML model (e.g., Random Forest).
+Evaluates performance.
+Saves the trained model as rf_model.pkl.
+
+5. ML Backend Loads Saved Model rf_model.pkl
+Your ML backend service (e.g., FastAPI app) loads rf_model.pkl at startup.
+Exposes a /predict POST endpoint that:
+Accepts incoming feature data,
+Runs inference using the loaded model,
+Returns predictions to the caller (e.g., your Kafka consumer or another client).
+
+
+Correct Order of Running Your Files
+Run your Kafka Consumer with Feature Extraction and Feature Accumulation
+This consumes raw blockchain data from Kafka.
+Extracts features per block using extract_features().
+Accumulates those feature dicts into a list and periodically saves to features.json.
+If your current consumer doesn't save to features.json, update it to do so (e.g., batch save every N records or on shutdown).
+Practical Recommendations:
+Start with 1,000 to 5,000 blocks worth of feature data as a reasonable initial dataset for training classical ML models like Random Forests.
+If blocks are produced roughly every 12-15 seconds (Ethereum average), 1,000 blocks correspond to about 3-4 hours of data.
+You can always grow this dataset over time and retrain models for better performance.
+
+Create or Prepare your Labels JSON (labels.json)
+Either manually create a labels.json file mapping block numbers to labels,
+Or write a separate script to generate labels based on external data sources (price feeds, known anomalies, gas spikes, etc.).
+
+Run the Dataset Preparation Script: prepare_training_data.py
+This script loads both features.json and labels.json.
+Merges the features with labels by block number.
+Saves out the combined labeled dataset training_dataset.csv.
+
+Run Your Model Training Script: train_model.py (or equivalent)
+Loads training_dataset.csv.
+Trains your ML model (e.g., Random Forest).
+Saves the trained model to rf_model.pkl.
+
+Start Your ML Backend with the Saved Model (endpoints.py)
+Loads the rf_model.pkl.
+Serves the /predict endpoint for inference.
+___________________
+
+
+Set Up the Python ML Backend / Model Server
+Create your machine learning model serving service using Django or FastAPI. This service will expose a /predict API endpoint to receive processed blockchain data and run predictions or classifications using your trained ML models.
+
+Connect Consumer to ML Backend
+Integrate the Kafka consumer service so that it forwards incoming Ethereum block data to the ML backend for inference, either synchronously or via an internal messaging system.
+
+Develop Data Preprocessing and ML Models
+Continue developing your blockchain-specific preprocessing logic and start training or loading predictive ML models with TensorFlow/PyTorch/LLaMA3.
+
+Optional: Build the Express API Gateway and React (Next.js) Frontend
+After your backend prediction pipeline is ready, build the Express.js API gateway that clients can access and a React/Next.js dashboard to visualize predictions and insights.
