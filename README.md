@@ -37,7 +37,6 @@ ChainBrain is a full-stack blockchain analytics platform designed to analyze Eth
 - React & Next.js (Frontend)  
 - Chart.js & react-chartjs-2 (Visualization)  
 - TypeScript (Frontend Type Safety)  
-- Docker (Optional Deployment Containerization)  
 
 ---
 
