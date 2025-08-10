@@ -7,11 +7,14 @@ import logging
 import time
 
 app = FastAPI()
-
-# Load model once on startup
+# Loads the RandomForest model (rf_model.pkl) only once at startup (better performance than loading on every request).
 model = joblib.load('../models/rf_model.pkl')
 print("Model loaded successfully!")
 
+# Defining input schema
+# Pydantic automatically:
+# Validates types (must be integers here)
+# Produces helpful error messages if input is wrong
 class Features(BaseModel):
     hour: int
     day_of_week: int
@@ -22,7 +25,7 @@ class Features(BaseModel):
     uniqueSenders: int
     uniqueReceivers: int
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO) # Allows logging of info-level events to stdout
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -32,6 +35,14 @@ async def log_requests(request: Request, call_next):
     logging.info(f"{request.method} {request.url} completed_in={process_time}s status_code={response.status_code}")
     return response
 
+# Runs before and after every request.
+# Measures how long a request took to process.
+# Logs HTTP method, URL, duration, and HTTP status code.
+
+# FastAPI automatically parses JSON into a Features object.
+# The input values are converted to a NumPy array matching the model’s expected shape (1, 8).
+# The model (RandomForestClassifier or Regressor) makes a prediction.
+# The first (and only) prediction is returned as an integer in JSON format.
 @app.post('/predict')
 async def predict(features: Features):
     feature_vector = np.array([[
@@ -53,4 +64,4 @@ async def predict(features: Features):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host="0.0.0.0", port=3000) # runs the app using Uvicorn server.
